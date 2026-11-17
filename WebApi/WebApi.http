@@ -1,0 +1,229 @@
+@WebApi_HostAddress = https://localhost:7180
+# O si ejecutas sin SSL: http://localhost:5028
+
+### =========================================================================
+### 1. CATÁLOGO DE PRODUCTOS (Servicios 1, 2, 6, 7, 9)
+### =========================================================================
+
+### Servicio 1: Listar Categorías Principales (Menú de Navegación)
+GET {{WebApi_HostAddress}}/api/catalogo/categorias
+Accept: application/json
+
+### Servicio 2: Listar Subcategorías (Ej: ID 1 = Bebidas y Licores)
+GET {{WebApi_HostAddress}}/api/catalogo/categorias/1/subcategorias
+Accept: application/json
+
+### Servicio 6: Buscar Productos por Término (Buscador Predictivo: "cerveza")
+GET {{WebApi_HostAddress}}/api/catalogo/productos/buscar?termino=cerveza
+Accept: application/json
+
+### Servicio 7: Listar Productos por Categoría o Subcategoría (Ej: ID 5 = Cervezas)
+GET {{WebApi_HostAddress}}/api/catalogo/productos/categoria/5
+Accept: application/json
+
+### Servicio 9: Consultar Detalle del Producto (Valida stock por tienda y máx por cliente en promo)
+GET {{WebApi_HostAddress}}/api/catalogo/productos/1/detalle?cantidad=3&tiendaId=1
+Accept: application/json
+
+### =========================================================================
+### 2. PROMOCIONES Y COMBOS (Servicios 8, 11)
+### =========================================================================
+
+### Servicio 8: Listar Promociones y Combos ("Tambo Packs") vigentes
+GET {{WebApi_HostAddress}}/api/promociones/packs
+Accept: application/json
+
+### Servicio 11: Validar Cupón de Descuento (Ej: TAMBO10 con subtotal S/ 45.00)
+POST {{WebApi_HostAddress}}/api/promociones/cupones/validar
+Content-Type: application/json
+
+{
+  "codigo": "TAMBO10",
+  "subtotalActual": 45.00
+}
+
+### =========================================================================
+### 3. CARRITO DE COMPRAS (Servicio 10)
+### =========================================================================
+
+### Consultar Carrito actual del cliente (Cliente ID 1)
+GET {{WebApi_HostAddress}}/api/carrito/1?tiendaId=1&direccionId=1
+Accept: application/json
+
+### Servicio 10: Gestión de Carrito de Compras - Acción: AGREGAR
+POST {{WebApi_HostAddress}}/api/carrito/gestionar
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "productoId": 1,
+  "cantidad": 2,
+  "accion": "AGREGAR",
+  "tiendaId": 1,
+  "direccionEntregaId": 1
+}
+
+### Servicio 10: Gestión de Carrito de Compras - Acción: EDITAR
+POST {{WebApi_HostAddress}}/api/carrito/gestionar
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "productoId": 1,
+  "cantidad": 3,
+  "accion": "EDITAR",
+  "tiendaId": 1,
+  "direccionEntregaId": 1
+}
+
+### Servicio 10: Gestión de Carrito de Compras - Acción: ELIMINAR
+POST {{WebApi_HostAddress}}/api/carrito/gestionar
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "productoId": 1,
+  "cantidad": 0,
+  "accion": "ELIMINAR",
+  "tiendaId": 1
+}
+
+### =========================================================================
+### 4. GESTIÓN DE CLIENTES Y AUTENTICACIÓN (Servicios 12, 13, 14)
+### =========================================================================
+
+### Servicio 13: Registro de Nuevo Usuario
+POST {{WebApi_HostAddress}}/api/auth/registro
+Content-Type: application/json
+
+{
+  "tipoDocumento": "DNI",
+  "numeroDocumento": "76543210",
+  "nombres": "María",
+  "apellidos": "Gómez Flores",
+  "correo": "maria.gomez@test.com",
+  "celular": "987112233",
+  "contrasena": "Password123!"
+}
+
+### Servicio 12: Iniciar Sesión de Usuario
+POST {{WebApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "juan.rodriguez@email.com",
+  "contrasena": "Password123!"
+}
+
+### Servicio 14: Listar Direcciones Guardadas del Usuario
+GET {{WebApi_HostAddress}}/api/auth/clientes/1/direcciones
+Accept: application/json
+
+### Registrar nueva dirección para el cliente
+POST {{WebApi_HostAddress}}/api/auth/clientes/1/direcciones
+Content-Type: application/json
+
+{
+  "alias": "Oficina San Isidro",
+  "distrito": "San Isidro",
+  "direccionTexto": "Av. Dos de Mayo",
+  "numero": "850",
+  "referencia": "Piso 4 - Centro Financiero",
+  "principal": false
+}
+
+### =========================================================================
+### 5. CHECKOUT, LOGÍSTICA Y COMPROBANTES (Servicios 3, 4, 5, 15)
+### =========================================================================
+
+### Servicio 4: Validar Cobertura por Dirección / Geolocalización
+POST {{WebApi_HostAddress}}/api/checkout/cobertura
+Content-Type: application/json
+
+{
+  "distrito": "Miraflores",
+  "direccionTexto": "Calle Schell 350",
+  "latitud": -12.122850,
+  "longitud": -77.029850
+}
+
+### Servicio 5: Listar Tiendas para Retiro en Tienda
+GET {{WebApi_HostAddress}}/api/checkout/tiendas-retiro?busqueda=Miraflores
+Accept: application/json
+
+### Servicio 15: Seleccionar Tipo de Comprobante de Pago
+GET {{WebApi_HostAddress}}/api/checkout/tipos-comprobante
+Accept: application/json
+
+### Servicio 3: Seleccionar Modalidad y Crear Pedido Checkout
+POST {{WebApi_HostAddress}}/api/checkout/crear-pedido
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "tiendaId": 1,
+  "tipoEntrega": "DELIVERY",
+  "direccionId": 1,
+  "tipoComprobanteId": 1,
+  "docComprobante": "72345678",
+  "cuponCodigo": "TAMBO10",
+  "notas": "Tocar el timbre blanco",
+  "items": [
+    {
+      "productoId": 1,
+      "cantidad": 2
+    },
+    {
+      "productoId": 6,
+      "cantidad": 1
+    }
+  ]
+}
+
+### =========================================================================
+### 6. PAGOS Y PASARELA (Servicios 16, 17, 18)
+### =========================================================================
+
+### Servicio 16: Listar Métodos de Pago Disponibles (con validación de stock)
+POST {{WebApi_HostAddress}}/api/checkout/metodos-pago
+Content-Type: application/json
+
+{
+  "tiendaId": 1,
+  "items": [
+    {
+      "productoId": 1,
+      "cantidad": 2
+    },
+    {
+      "productoId": 6,
+      "cantidad": 1
+    }
+  ]
+}
+
+### Servicio 17: Procesar Pago con Tarjeta
+POST {{WebApi_HostAddress}}/api/checkout/pagar-tarjeta
+Content-Type: application/json
+
+{
+  "pedidoId": 1,
+  "numeroTarjeta": "4111111111111234",
+  "fechaVencimiento": "12/28",
+  "cvv": "123",
+  "titularNombre": "Juan",
+  "titularApellido": "Rodríguez",
+  "titularCorreo": "juan.rodriguez@email.com"
+}
+
+### Servicio 18: Consultar Detalle de Orden en Pasarela
+GET {{WebApi_HostAddress}}/api/checkout/orden/1
+Accept: application/json
+
+### =========================================================================
+### 7. SEGUIMIENTO DEL PEDIDO (Servicio 19)
+### =========================================================================
+
+### Servicio 19: Seguimiento del Pedido (Mis Pedidos)
+GET {{WebApi_HostAddress}}/api/checkout/seguimiento/TMB-202611-0001
+Accept: application/json

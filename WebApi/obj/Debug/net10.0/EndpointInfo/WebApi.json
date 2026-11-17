@@ -1,0 +1,2345 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Tambo+ E-commerce SOA API",
+    "description": "Servicios SOA para la aplicación de e-commerce Tambo+:\n- Catálogo de Productos y Búsqueda Predictiva (Servicios 1, 2, 6, 7, 9)\n- Promociones y Cupones (Servicios 8, 11)\n- Carrito de Compras (Servicio 10)\n- Gestión de Clientes y Autenticación (Servicios 12, 13, 14)\n- Checkout, Logística, Pagos y Seguimiento (Servicios 3, 4, 5, 15, 16, 17, 18, 19)",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/Auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Servicio 12: Iniciar Sesión de Usuario",
+        "description": "Regla de negocio: Obligatorio correo y contraseña. Solo clientes activos (cliente.activo = 1) pueden iniciar sesión.",
+        "requestBody": {
+          "description": "Credenciales de inicio de sesión (correo electrónico y contraseña).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/registro": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Servicio 13: Registro de Nuevo Usuario",
+        "description": "Regla de negocio: Correo y número de documento no deben existir previamente. El cliente se crea activo con fecha del día.",
+        "requestBody": {
+          "description": "Datos del nuevo cliente (documento, nombres, apellidos, correo, celular, contraseña).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroClienteDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroClienteDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistroClienteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Auth/clientes/{clienteId}/direcciones": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Servicio 14: Listar Direcciones Guardadas del Usuario",
+        "description": "Regla de negocio: El usuario consulta las direcciones registradas en su cuenta con zona de despacho asignada.",
+        "parameters": [
+          {
+            "name": "clienteId",
+            "in": "path",
+            "description": "Identificador del cliente.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DireccionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Registrar nueva dirección para el usuario autenticado",
+        "parameters": [
+          {
+            "name": "clienteId",
+            "in": "path",
+            "description": "Identificador del cliente.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Datos de la nueva dirección física.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearDireccionDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearDireccionDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearDireccionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DireccionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Carrito/{clienteId}": {
+      "get": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Obtener el carrito de compras del cliente",
+        "parameters": [
+          {
+            "name": "clienteId",
+            "in": "path",
+            "description": "Identificador del cliente.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tiendaId",
+            "in": "query",
+            "description": "Identificador opcional de la tienda física para validar stock.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "direccionId",
+            "in": "query",
+            "description": "Identificador opcional de la dirección de entrega.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tiendaRetiroId",
+            "in": "query",
+            "description": "Identificador opcional de la tienda de retiro.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarritoResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Carrito/gestionar": {
+      "post": {
+        "tags": [
+          "Carrito"
+        ],
+        "summary": "Servicio 10: Gestión de Carrito de Compras (Agregar, Editar, Eliminar)",
+        "description": "Regla de negocio: Producto, cantidad y acción elegida (AGREGAR, EDITAR o ELIMINAR). Contenido del carrito y subtotal actualizados.\r\nPara continuar con la compra es obligatorio ingresar una dirección de entrega o seleccionar un local de retiro.",
+        "requestBody": {
+          "description": "Datos de la acción (AGREGAR, EDITAR, ELIMINAR), producto, cantidad y tienda/dirección.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GestionarCarritoRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GestionarCarritoRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GestionarCarritoRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarritoResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Catalogo/categorias": {
+      "get": {
+        "tags": [
+          "Catalogo"
+        ],
+        "summary": "Servicio 1: Listar Categorías Principales",
+        "description": "Regla de negocio: Solo se pueden seleccionar las categorías disponibles en el menú de navegación (categoria_padre_id IS NULL, borrado = 0, orden).",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoriaDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Catalogo/categorias/{categoriaId}/subcategorias": {
+      "get": {
+        "tags": [
+          "Catalogo"
+        ],
+        "summary": "Servicio 2: Listar Subcategorías",
+        "description": "Regla de negocio: Las subcategorías mostradas deben pertenecer a la categoría seleccionada (categoria_padre_id = categoría elegida).",
+        "parameters": [
+          {
+            "name": "categoriaId",
+            "in": "path",
+            "description": "Identificador de la categoría padre seleccionada.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubcategoriaDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Catalogo/productos/buscar": {
+      "get": {
+        "tags": [
+          "Catalogo"
+        ],
+        "summary": "Servicio 6: Buscar Productos por Término (Buscador Predictivo)",
+        "description": "Regla de negocio: Los resultados deben corresponder al término ingresado (búsqueda por nombre del producto o de la marca, sin productos borrados).",
+        "parameters": [
+          {
+            "name": "termino",
+            "in": "query",
+            "description": "Texto a buscar en el nombre del producto o marca (ej. 'cerveza').",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductoBuscadorDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Catalogo/productos/categoria/{categoriaId}": {
+      "get": {
+        "tags": [
+          "Catalogo"
+        ],
+        "summary": "Servicio 7: Listar Productos por Categoría o Subcategoría",
+        "description": "Regla de negocio: Solo deben mostrarse los productos que pertenecen a la sección elegida con su imagen, nombre, precio y descuento cuando corresponda.",
+        "parameters": [
+          {
+            "name": "categoriaId",
+            "in": "path",
+            "description": "Identificador de la sección o categoría a listar.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductoCatalogoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Catalogo/productos/{productoId}/detalle": {
+      "get": {
+        "tags": [
+          "Catalogo"
+        ],
+        "summary": "Servicio 9: Consultar Detalle del Producto",
+        "description": "Regla de negocio: La cantidad no debe superar el stock disponible del producto (inventario.stock_disponible) ni, si está en promoción, el máximo por cliente (promocion.max_por_cliente).",
+        "parameters": [
+          {
+            "name": "productoId",
+            "in": "path",
+            "description": "Identificador del producto.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "cantidad",
+            "in": "query",
+            "description": "Cantidad deseada por el cliente (por defecto 1).",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "tiendaId",
+            "in": "query",
+            "description": "Identificador de la tienda para consultar stock local disponible.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleProductoResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/cobertura": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 4: Validar Cobertura por Dirección / Geolocalización",
+        "description": "Regla de negocio: Solo se puede realizar el delivery si la dirección se encuentra dentro de la zona de cobertura de una tienda activa con delivery_activo = 1.",
+        "requestBody": {
+          "description": "Dirección de entrega, distrito y coordenadas.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCoberturaRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCoberturaRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCoberturaRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoberturaResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/tiendas-retiro": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 5: Listar Tiendas para Retiro en Tienda",
+        "description": "Regla de negocio: Para retirar el pedido se debe seleccionar una tienda habilitada (activa, no borrada y retiro_activo = 1).",
+        "parameters": [
+          {
+            "name": "busqueda",
+            "in": "query",
+            "description": "Filtro opcional por nombre o distrito de la tienda.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TiendaRetiroDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/tipos-comprobante": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 15: Seleccionar Tipo de Comprobante de Pago",
+        "description": "Lista los comprobantes habilitados (Boleta de Venta / Factura Electrónica).",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TipoComprobanteDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/metodos-pago": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 16: Listar Métodos de Pago Disponibles",
+        "description": "Regla de negocio: Solo se listan métodos no borrados. Si algún producto no tiene stock suficiente en la tienda asignada, no se puede continuar con el pago.",
+        "requestBody": {
+          "description": "Tienda física asignada y productos a validar.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultarMetodosPagoRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultarMetodosPagoRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultarMetodosPagoRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsultarMetodosPagoResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsultarMetodosPagoResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/crear-pedido": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 3: Seleccionar Modalidad de Entrega y Generar Pedido de Checkout",
+        "description": "Regla de negocio: Determina tienda, valida stock disponible, calcula envío según zona y genera la orden en estado inicial.",
+        "requestBody": {
+          "description": "Parámetros del pedido: cliente, tienda, modalidad, dirección, comprobante y productos.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPedidoCheckoutDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPedidoCheckoutDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPedidoCheckoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PedidoCreadoResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PedidoCreadoResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/pagar-tarjeta": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 17: Procesar Pago con Tarjeta",
+        "description": "Regla de negocio: Datos de tarjeta y titular obligatorios. El pedido no debe tener ya un pago aprobado. El monto cobrado es el monto_total.",
+        "requestBody": {
+          "description": "Datos de la tarjeta bancaria, titular y código del pedido.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcesarPagoTarjetaDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcesarPagoTarjetaDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcesarPagoTarjetaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/orden/{pedidoId}": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 18: Consultar Detalle de Orden en Pasarela",
+        "description": "Regla de negocio: Resumen del pedido, monto a pagar y estado del intento de pago. Si fue cancelado/rechazado, permite seleccionar otro medio.",
+        "parameters": [
+          {
+            "name": "pedidoId",
+            "in": "path",
+            "description": "Identificador único del pedido.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenOrdenPasarelaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Checkout/seguimiento/{numeroPedido}": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Servicio 19: Seguimiento del Pedido (Mis Pedidos)",
+        "description": "Regla de negocio: Muestra estado actual, historial ordenado según secuencia Confirmado -> Preparando -> En camino -> Entregado, y repartidor asignado.",
+        "parameters": [
+          {
+            "name": "numeroPedido",
+            "in": "path",
+            "description": "Código alfanumérico del pedido.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeguimientoPedidoDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Promociones/packs": {
+      "get": {
+        "tags": [
+          "Promociones"
+        ],
+        "summary": "Servicio 8: Listar Promociones y Combos (\"Tambo Packs\")",
+        "description": "Regla de negocio: Solo deben mostrarse promociones y combos vigentes (fecha_inicio <= hoy <= fecha_fin).",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PromocionPackDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Promociones/cupones/validar": {
+      "post": {
+        "tags": [
+          "Promociones"
+        ],
+        "summary": "Servicio 11: Validar Cupón de Descuento",
+        "description": "Regla de negocio: Valida código, vigencia, monto mínimo y calcula el descuento y total actualizados.",
+        "requestBody": {
+          "description": "Código del cupón y subtotal de la compra.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCuponRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCuponRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarCuponRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidarCuponResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidarCuponResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "WebApi"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CarritoItemDto": {
+        "type": "object",
+        "properties": {
+          "detalleCarritoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombreProducto": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "precioUnitario": {
+            "type": "number",
+            "format": "double"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subtotalItem": {
+            "type": "number",
+            "format": "double"
+          },
+          "stockDisponibleEnTienda": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stockSuficiente": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CarritoResponseDto": {
+        "type": "object",
+        "properties": {
+          "carritoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "clienteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CarritoItemDto"
+            },
+            "nullable": true
+          },
+          "puedeContinuarCompra": {
+            "type": "boolean"
+          },
+          "mensajeContinuarCompra": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CategoriaDto": {
+        "type": "object",
+        "properties": {
+          "categoriaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "orden": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClienteResponseDto": {
+        "type": "object",
+        "properties": {
+          "clienteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoDocumento": {
+            "type": "string",
+            "nullable": true
+          },
+          "numeroDocumento": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombres": {
+            "type": "string",
+            "nullable": true
+          },
+          "apellidos": {
+            "type": "string",
+            "nullable": true
+          },
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "celular": {
+            "type": "string",
+            "nullable": true
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "fechaRegistro": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoberturaResponseDto": {
+        "type": "object",
+        "properties": {
+          "tieneCobertura": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          },
+          "tiendaAsignadaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "nombreTienda": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccionTienda": {
+            "type": "string",
+            "nullable": true
+          },
+          "zonaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "zonaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "costoDelivery": {
+            "type": "number",
+            "format": "double"
+          },
+          "tiempoEstimadoMin": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConsultarMetodosPagoRequestDto": {
+        "required": [
+          "tiendaId"
+        ],
+        "type": "object",
+        "properties": {
+          "tiendaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pedidoId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidarStockItemDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConsultarMetodosPagoResponseDto": {
+        "type": "object",
+        "properties": {
+          "stockDisponibleValido": {
+            "type": "boolean"
+          },
+          "mensajeValidacionStock": {
+            "type": "string",
+            "nullable": true
+          },
+          "erroresStock": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "metodosPago": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetodoPagoDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CrearDireccionDto": {
+        "required": [
+          "alias",
+          "direccionTexto",
+          "distrito"
+        ],
+        "type": "object",
+        "properties": {
+          "alias": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "distrito": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "direccionTexto": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "numero": {
+            "type": "string",
+            "nullable": true
+          },
+          "departamentoInterior": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "principal": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CrearPedidoCheckoutDto": {
+        "required": [
+          "clienteId",
+          "docComprobante",
+          "items",
+          "tiendaId",
+          "tipoComprobanteId",
+          "tipoEntrega"
+        ],
+        "type": "object",
+        "properties": {
+          "clienteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tiendaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipoEntrega": {
+            "minLength": 1,
+            "pattern": "^(DELIVERY|RETIRO_TIENDA)$",
+            "type": "string"
+          },
+          "direccionId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "tipoComprobanteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "docComprobante": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "razonSocial": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccionFiscal": {
+            "type": "string",
+            "nullable": true
+          },
+          "cuponCodigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "notas": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemPedidoRequestDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "DetalleItemResumenDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreProducto": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precioUnitario": {
+            "type": "number",
+            "format": "double"
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DetalleProductoResponseDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "marcaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoriaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "precioUnitario": {
+            "type": "number",
+            "format": "double"
+          },
+          "precioOferta": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "cantidadDeseada": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precioTotalCalculado": {
+            "type": "number",
+            "format": "double"
+          },
+          "tiendaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stockDisponible": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "superaStock": {
+            "type": "boolean"
+          },
+          "enPromocion": {
+            "type": "boolean"
+          },
+          "maxPorCliente": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "superaMaxPorCliente": {
+            "type": "boolean"
+          },
+          "puedeAgregar": {
+            "type": "boolean"
+          },
+          "mensajeValidacion": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DireccionDto": {
+        "type": "object",
+        "properties": {
+          "direccionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "clienteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "zonaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "zonaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "alias": {
+            "type": "string",
+            "nullable": true
+          },
+          "distrito": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccionTexto": {
+            "type": "string",
+            "nullable": true
+          },
+          "numero": {
+            "type": "string",
+            "nullable": true
+          },
+          "departamentoInterior": {
+            "type": "string",
+            "nullable": true
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "principal": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GestionarCarritoRequestDto": {
+        "required": [
+          "accion",
+          "clienteId",
+          "productoId"
+        ],
+        "type": "object",
+        "properties": {
+          "clienteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accion": {
+            "minLength": 1,
+            "pattern": "^(AGREGAR|EDITAR|ELIMINAR)$",
+            "type": "string"
+          },
+          "tiendaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "direccionEntregaId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "tiendaRetiroId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HistorialEstadoDto": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaHora": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "comentario": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ItemPedidoRequestDto": {
+        "required": [
+          "productoId"
+        ],
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidad": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginRequestDto": {
+        "required": [
+          "contrasena",
+          "correo"
+        ],
+        "type": "object",
+        "properties": {
+          "correo": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "contrasena": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "exito": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          },
+          "cliente": {
+            "$ref": "#/components/schemas/ClienteResponseDto"
+          },
+          "token": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MetodoPagoDto": {
+        "type": "object",
+        "properties": {
+          "metodoPagoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "esOnline": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PagoResponseDto": {
+        "type": "object",
+        "properties": {
+          "aprobado": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          },
+          "codigoTransaccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "montoCobrado": {
+            "type": "number",
+            "format": "double"
+          },
+          "tarjetaMarca": {
+            "type": "string",
+            "nullable": true
+          },
+          "tarjetaUltimosDigitos": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nuevoEstadoPedido": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PedidoCreadoResponseDto": {
+        "type": "object",
+        "properties": {
+          "exito": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          },
+          "pedidoId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "numeroPedido": {
+            "type": "string",
+            "nullable": true
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "descuento": {
+            "type": "number",
+            "format": "double"
+          },
+          "costoEnvio": {
+            "type": "number",
+            "format": "double"
+          },
+          "montoTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ProcesarPagoTarjetaDto": {
+        "required": [
+          "cvv",
+          "fechaVencimiento",
+          "numeroTarjeta",
+          "pedidoId",
+          "titularApellido",
+          "titularCorreo",
+          "titularNombre"
+        ],
+        "type": "object",
+        "properties": {
+          "pedidoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numeroTarjeta": {
+            "minLength": 1,
+            "type": "string",
+            "format": "credit-card"
+          },
+          "fechaVencimiento": {
+            "minLength": 1,
+            "pattern": "^(0[1-9]|1[0-2])\\/?([0-9]{4}|[0-9]{2})$",
+            "type": "string"
+          },
+          "cvv": {
+            "minLength": 1,
+            "pattern": "^[0-9]{3,4}$",
+            "type": "string"
+          },
+          "titularNombre": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "titularApellido": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "titularCorreo": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductoBuscadorDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "marca": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "precioOferta": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "unidadMedida": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductoCatalogoDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoriaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoriaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "marcaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "sku": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "precio": {
+            "type": "number",
+            "format": "double"
+          },
+          "precioOferta": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "descuentoPorcentaje": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "unidadMedida": {
+            "type": "string",
+            "nullable": true
+          },
+          "tienePromocion": {
+            "type": "boolean"
+          },
+          "nombrePromocion": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PromocionPackDto": {
+        "type": "object",
+        "properties": {
+          "promocionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoPromocion": {
+            "type": "string",
+            "nullable": true
+          },
+          "precioPromocional": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "porcentajeDescuento": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "cantidadPack": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxPorCliente": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bannerTitulo": {
+            "type": "string",
+            "nullable": true
+          },
+          "bannerImagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "productosIncluidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromocionProductoItemDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PromocionProductoItemDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombreProducto": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "precioRegular": {
+            "type": "number",
+            "format": "double"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegistroClienteDto": {
+        "required": [
+          "apellidos",
+          "celular",
+          "contrasena",
+          "correo",
+          "nombres",
+          "numeroDocumento",
+          "tipoDocumento"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoDocumento": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "nombres": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "apellidos": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "correo": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "celular": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "contrasena": {
+            "minLength": 6,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RepartidorContactoDto": {
+        "type": "object",
+        "properties": {
+          "nombreCompleto": {
+            "type": "string",
+            "nullable": true
+          },
+          "celular": {
+            "type": "string",
+            "nullable": true
+          },
+          "placa": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoVehiculo": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResumenOrdenPasarelaDto": {
+        "type": "object",
+        "properties": {
+          "pedidoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numeroPedido": {
+            "type": "string",
+            "nullable": true
+          },
+          "fechaPedido": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tiendaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoEntrega": {
+            "type": "string",
+            "nullable": true
+          },
+          "estadoPedido": {
+            "type": "string",
+            "nullable": true
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "descuento": {
+            "type": "number",
+            "format": "double"
+          },
+          "costoEnvio": {
+            "type": "number",
+            "format": "double"
+          },
+          "montoTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "estadoUltimoPago": {
+            "type": "string",
+            "nullable": true
+          },
+          "codigoTransaccionPago": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetalleItemResumenDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SeguimientoPedidoDto": {
+        "type": "object",
+        "properties": {
+          "numeroPedido": {
+            "type": "string",
+            "nullable": true
+          },
+          "estadoActual": {
+            "type": "string",
+            "nullable": true
+          },
+          "tiempoEstimadoLlegada": {
+            "type": "string",
+            "nullable": true
+          },
+          "repartidor": {
+            "$ref": "#/components/schemas/RepartidorContactoDto"
+          },
+          "totalPagado": {
+            "type": "number",
+            "format": "double"
+          },
+          "medioPago": {
+            "type": "string",
+            "nullable": true
+          },
+          "productos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetalleItemResumenDto"
+            },
+            "nullable": true
+          },
+          "historialEstados": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistorialEstadoDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubcategoriaDto": {
+        "type": "object",
+        "properties": {
+          "categoriaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoriaPadreId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "imagenUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "orden": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TiendaRetiroDto": {
+        "type": "object",
+        "properties": {
+          "tiendaId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigoTienda": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "distrito": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true
+          },
+          "horarioAtencion": {
+            "type": "string",
+            "nullable": true
+          },
+          "retiroActivo": {
+            "type": "boolean"
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TipoComprobanteDto": {
+        "type": "object",
+        "properties": {
+          "tipoComprobanteId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "requiereRuc": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidarCoberturaRequestDto": {
+        "required": [
+          "direccionTexto",
+          "distrito"
+        ],
+        "type": "object",
+        "properties": {
+          "distrito": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "direccionTexto": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidarCuponRequestDto": {
+        "required": [
+          "codigo"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "subtotalActual": {
+            "maximum": 100000,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidarCuponResponseDto": {
+        "type": "object",
+        "properties": {
+          "esValido": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true
+          },
+          "cuponId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "codigo": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipoDescuento": {
+            "type": "string",
+            "nullable": true
+          },
+          "valorDescuento": {
+            "type": "number",
+            "format": "double"
+          },
+          "descuentoCalculado": {
+            "type": "number",
+            "format": "double"
+          },
+          "subtotalOriginal": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalConDescuento": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidarStockItemDto": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

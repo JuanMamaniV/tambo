@@ -1,0 +1,6 @@
+@MiApiSwagger_HostAddress = http://localhost:5189
+
+GET {{MiApiSwagger_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

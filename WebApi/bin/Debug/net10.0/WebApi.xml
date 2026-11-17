@@ -1,0 +1,654 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebApi</name>
+    </assembly>
+    <members>
+        <member name="T:WebApi.Controllers.AuthController">
+            <summary>
+            Servicio SOA: Gestión de Clientes (a. Registro y autenticación)
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.AuthController.Login(WebApi.DTOs.LoginRequestDto)">
+            <summary>
+            Servicio 12: Iniciar Sesión de Usuario
+            </summary>
+            <param name="request">Credenciales de inicio de sesión (correo electrónico y contraseña).</param>
+            <returns>Datos del cliente autenticado y token de sesión, o 401 si las credenciales son inválidas.</returns>
+            <remarks>
+            Regla de negocio: Obligatorio correo y contraseña. Solo clientes activos (cliente.activo = 1) pueden iniciar sesión.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.AuthController.Registro(WebApi.DTOs.RegistroClienteDto)">
+            <summary>
+            Servicio 13: Registro de Nuevo Usuario
+            </summary>
+            <param name="request">Datos del nuevo cliente (documento, nombres, apellidos, correo, celular, contraseña).</param>
+            <returns>Cliente creado y sesión iniciada, o 400 si el correo o documento ya existen.</returns>
+            <remarks>
+            Regla de negocio: Correo y número de documento no deben existir previamente. El cliente se crea activo con fecha del día.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.AuthController.ListarDirecciones(System.Int32)">
+            <summary>
+            Servicio 14: Listar Direcciones Guardadas del Usuario
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <returns>Listado de direcciones activas registradas por el cliente.</returns>
+            <remarks>
+            Regla de negocio: El usuario consulta las direcciones registradas en su cuenta con zona de despacho asignada.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.AuthController.GuardarDireccion(System.Int32,WebApi.DTOs.CrearDireccionDto)">
+            <summary>
+            Registrar nueva dirección para el usuario autenticado
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <param name="request">Datos de la nueva dirección física.</param>
+            <returns>Dirección creada y vinculada.</returns>
+        </member>
+        <member name="T:WebApi.Controllers.CarritoController">
+            <summary>
+            Servicio SOA: Carrito de Compras
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.CarritoController.#ctor(WebApi.Services.ICarritoService)">
+            <summary>
+            Constructor del controlador de carrito de compras.
+            </summary>
+            <param name="carritoService">Servicio de gestión de carrito.</param>
+        </member>
+        <member name="M:WebApi.Controllers.CarritoController.ObtenerCarrito(System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Obtener el carrito de compras del cliente
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <param name="tiendaId">Identificador opcional de la tienda física para validar stock.</param>
+            <param name="direccionId">Identificador opcional de la dirección de entrega.</param>
+            <param name="tiendaRetiroId">Identificador opcional de la tienda de retiro.</param>
+            <returns>Contenido del carrito, subtotal general y estado de validación de pre-requisitos de compra.</returns>
+        </member>
+        <member name="M:WebApi.Controllers.CarritoController.GestionarCarrito(WebApi.DTOs.GestionarCarritoRequestDto)">
+            <summary>
+            Servicio 10: Gestión de Carrito de Compras (Agregar, Editar, Eliminar)
+            </summary>
+            <param name="request">Datos de la acción (AGREGAR, EDITAR, ELIMINAR), producto, cantidad y tienda/dirección.</param>
+            <returns>Contenido del carrito y subtotal actualizados.</returns>
+            <remarks>
+            Regla de negocio: Producto, cantidad y acción elegida (AGREGAR, EDITAR o ELIMINAR). Contenido del carrito y subtotal actualizados.
+            Para continuar con la compra es obligatorio ingresar una dirección de entrega o seleccionar un local de retiro.
+            </remarks>
+        </member>
+        <member name="T:WebApi.Controllers.CatalogoController">
+            <summary>
+            Servicio SOA: Catálogo de Productos y Navegación
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.#ctor(WebApi.Services.ICatalogoService)">
+            <summary>
+            Constructor del controlador de catálogo de productos.
+            </summary>
+            <param name="catalogoService">Servicio de catálogo y navegación.</param>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.ListarCategorias">
+            <summary>
+            Servicio 1: Listar Categorías Principales
+            </summary>
+            <returns>Lista de categorías principales activas ordenadas por visualización.</returns>
+            <remarks>
+            Regla de negocio: Solo se pueden seleccionar las categorías disponibles en el menú de navegación (categoria_padre_id IS NULL, borrado = 0, orden).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.ListarSubcategorias(System.Int32)">
+            <summary>
+            Servicio 2: Listar Subcategorías
+            </summary>
+            <param name="categoriaId">Identificador de la categoría padre seleccionada.</param>
+            <returns>Lista de subcategorías vinculadas a la categoría elegida.</returns>
+            <remarks>
+            Regla de negocio: Las subcategorías mostradas deben pertenecer a la categoría seleccionada (categoria_padre_id = categoría elegida).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.BuscarPredictivo(System.String)">
+            <summary>
+            Servicio 6: Buscar Productos por Término (Buscador Predictivo)
+            </summary>
+            <param name="termino">Texto a buscar en el nombre del producto o marca (ej. 'cerveza').</param>
+            <returns>Listado predictivo de productos con imagen y precio.</returns>
+            <remarks>
+            Regla de negocio: Los resultados deben corresponder al término ingresado (búsqueda por nombre del producto o de la marca, sin productos borrados).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.ListarPorCategoria(System.Int32)">
+            <summary>
+            Servicio 7: Listar Productos por Categoría o Subcategoría
+            </summary>
+            <param name="categoriaId">Identificador de la sección o categoría a listar.</param>
+            <returns>Productos pertenecientes a la sección con precios, ofertas y fotos.</returns>
+            <remarks>
+            Regla de negocio: Solo deben mostrarse los productos que pertenecen a la sección elegida con su imagen, nombre, precio y descuento cuando corresponda.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CatalogoController.ConsultarDetalle(System.Int32,System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Servicio 9: Consultar Detalle del Producto
+            </summary>
+            <param name="productoId">Identificador del producto.</param>
+            <param name="cantidad">Cantidad deseada por el cliente (por defecto 1).</param>
+            <param name="tiendaId">Identificador de la tienda para consultar stock local disponible.</param>
+            <returns>Ficha técnica del producto, total calculado y estado de validación de stock y promociones.</returns>
+            <remarks>
+            Regla de negocio: La cantidad no debe superar el stock disponible del producto (inventario.stock_disponible) ni, si está en promoción, el máximo por cliente (promocion.max_por_cliente).
+            </remarks>
+        </member>
+        <member name="T:WebApi.Controllers.CheckoutController">
+            <summary>
+            Servicio SOA: Checkout, Delivery y Pagos (f. Checkout y pago)
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.#ctor(WebApi.Services.ICheckoutService)">
+            <summary>
+            Constructor del controlador de checkout.
+            </summary>
+            <param name="checkoutService">Servicio de operaciones de compra, pagos y logística.</param>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.ValidarCobertura(WebApi.DTOs.ValidarCoberturaRequestDto)">
+            <summary>
+            Servicio 4: Validar Cobertura por Dirección / Geolocalización
+            </summary>
+            <param name="request">Dirección de entrega, distrito y coordenadas.</param>
+            <returns>Confirmación de cobertura, tienda asignada y costo de despacho.</returns>
+            <remarks>
+            Regla de negocio: Solo se puede realizar el delivery si la dirección se encuentra dentro de la zona de cobertura de una tienda activa con delivery_activo = 1.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.ListarTiendasRetiro(System.String)">
+            <summary>
+            Servicio 5: Listar Tiendas para Retiro en Tienda
+            </summary>
+            <param name="busqueda">Filtro opcional por nombre o distrito de la tienda.</param>
+            <returns>Lista de tiendas habilitadas para retiro en local.</returns>
+            <remarks>
+            Regla de negocio: Para retirar el pedido se debe seleccionar una tienda habilitada (activa, no borrada y retiro_activo = 1).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.ListarTiposComprobante">
+            <summary>
+            Servicio 15: Seleccionar Tipo de Comprobante de Pago
+            </summary>
+            <returns>Catálogo de comprobantes de pago (Boleta / Factura).</returns>
+            <remarks>
+            Lista los comprobantes habilitados (Boleta de Venta / Factura Electrónica).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.ConsultarMetodosPago(WebApi.DTOs.ConsultarMetodosPagoRequestDto)">
+            <summary>
+            Servicio 16: Listar Métodos de Pago Disponibles
+            </summary>
+            <param name="request">Tienda física asignada y productos a validar.</param>
+            <returns>Métodos de pago habilitados o error 400 si falta stock.</returns>
+            <remarks>
+            Regla de negocio: Solo se listan métodos no borrados. Si algún producto no tiene stock suficiente en la tienda asignada, no se puede continuar con el pago.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.CrearPedido(WebApi.DTOs.CrearPedidoCheckoutDto)">
+            <summary>
+            Servicio 3: Seleccionar Modalidad de Entrega y Generar Pedido de Checkout
+            </summary>
+            <param name="request">Parámetros del pedido: cliente, tienda, modalidad, dirección, comprobante y productos.</param>
+            <returns>Pedido generado con cálculo de subtotal, descuento por cupón y costo de envío.</returns>
+            <remarks>
+            Regla de negocio: Determina tienda, valida stock disponible, calcula envío según zona y genera la orden en estado inicial.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.PagarConTarjeta(WebApi.DTOs.ProcesarPagoTarjetaDto)">
+            <summary>
+            Servicio 17: Procesar Pago con Tarjeta
+            </summary>
+            <param name="request">Datos de la tarjeta bancaria, titular y código del pedido.</param>
+            <returns>Confirmación de pago aprobado o mensaje de rechazo bancario.</returns>
+            <remarks>
+            Regla de negocio: Datos de tarjeta y titular obligatorios. El pedido no debe tener ya un pago aprobado. El monto cobrado es el monto_total.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.ConsultarDetalleOrdenPasarela(System.Int32)">
+            <summary>
+            Servicio 18: Consultar Detalle de Orden en Pasarela
+            </summary>
+            <param name="pedidoId">Identificador único del pedido.</param>
+            <returns>Resumen de orden y estado de pago en pasarela.</returns>
+            <remarks>
+            Regla de negocio: Resumen del pedido, monto a pagar y estado del intento de pago. Si fue cancelado/rechazado, permite seleccionar otro medio.
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.CheckoutController.SeguimientoPedido(System.String)">
+            <summary>
+            Servicio 19: Seguimiento del Pedido (Mis Pedidos)
+            </summary>
+            <param name="numeroPedido">Código alfanumérico del pedido.</param>
+            <returns>Información de seguimiento cronológico y contacto del repartidor.</returns>
+            <remarks>
+            Regla de negocio: Muestra estado actual, historial ordenado según secuencia Confirmado -> Preparando -> En camino -> Entregado, y repartidor asignado.
+            </remarks>
+        </member>
+        <member name="T:WebApi.Controllers.PromocionesController">
+            <summary>
+            Servicio SOA: Promociones y Cupones
+            </summary>
+        </member>
+        <member name="M:WebApi.Controllers.PromocionesController.#ctor(WebApi.Services.IPromocionService)">
+            <summary>
+            Constructor del controlador de promociones y cupones.
+            </summary>
+            <param name="promocionService">Servicio de promociones y campañas de descuento.</param>
+        </member>
+        <member name="M:WebApi.Controllers.PromocionesController.ListarPromociones">
+            <summary>
+            Servicio 8: Listar Promociones y Combos ("Tambo Packs")
+            </summary>
+            <returns>Colección de combos y packs vigentes con su detalle de productos.</returns>
+            <remarks>
+            Regla de negocio: Solo deben mostrarse promociones y combos vigentes (fecha_inicio &lt;= hoy &lt;= fecha_fin).
+            </remarks>
+        </member>
+        <member name="M:WebApi.Controllers.PromocionesController.ValidarCupon(WebApi.DTOs.ValidarCuponRequestDto)">
+            <summary>
+            Servicio 11: Validar Cupón de Descuento
+            </summary>
+            <param name="request">Código del cupón y subtotal de la compra.</param>
+            <returns>Descuento calculado y total recalculado si el cupón es válido, o 400 si no aplica.</returns>
+            <remarks>
+            Regla de negocio: Valida código, vigencia, monto mínimo y calcula el descuento y total actualizados.
+            </remarks>
+        </member>
+        <member name="T:WebApi.Services.AuthService">
+            <summary>
+            Implementación de la lógica de negocio para autenticación de clientes y direcciones.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.AuthService.#ctor(WebApi.Data.TamboDbContext,Microsoft.Extensions.Logging.ILogger{WebApi.Services.AuthService})">
+            <summary>
+            Constructor con inyección de dependencias del DbContext y Logger.
+            </summary>
+            <param name="context">Contexto de base de datos TamboDB.</param>
+            <param name="logger">Servicio de logging del sistema.</param>
+        </member>
+        <member name="M:WebApi.Services.AuthService.LoginAsync(WebApi.DTOs.LoginRequestDto)">
+            <summary>
+            Servicio 12: Inicia sesión validando correo, contraseña hasheada y estado activo del cliente.
+            </summary>
+            <param name="request">Credenciales del cliente.</param>
+            <returns>Respuesta con datos de usuario y token de sesión si las credenciales son válidas.</returns>
+        </member>
+        <member name="M:WebApi.Services.AuthService.RegistroAsync(WebApi.DTOs.RegistroClienteDto)">
+            <summary>
+            Servicio 13: Registra un nuevo usuario verificando que ni el correo ni el documento existan previamente.
+            Aplica hashing criptográfico a la contraseña antes del almacenamiento.
+            </summary>
+            <param name="request">Formulario de registro del cliente.</param>
+            <returns>Resultado del registro con sesión iniciada.</returns>
+        </member>
+        <member name="M:WebApi.Services.AuthService.ListarDireccionesAsync(System.Int32)">
+            <summary>
+            Servicio 14: Lista las direcciones guardadas del cliente ordenadas priorizando la principal.
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <returns>Lista de direcciones activas.</returns>
+        </member>
+        <member name="M:WebApi.Services.AuthService.CrearDireccionAsync(System.Int32,WebApi.DTOs.CrearDireccionDto)">
+            <summary>
+            Agrega una dirección a la libreta del cliente y actualiza el indicador de dirección principal.
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <param name="request">Datos de la nueva dirección.</param>
+            <returns>Dirección creada y vinculada.</returns>
+        </member>
+        <member name="T:WebApi.Services.CarritoService">
+            <summary>
+            Implementación de la lógica de negocio para la gestión de carrito de compras y verificación de pre-requisitos de compra.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.CarritoService.#ctor(WebApi.Data.TamboDbContext)">
+            <summary>
+            Constructor con inyección del DbContext.
+            </summary>
+            <param name="context">Contexto de base de datos TamboDB.</param>
+        </member>
+        <member name="M:WebApi.Services.CarritoService.ObtenerCarritoAsync(System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Obtiene el carrito activo del usuario, totalizando items y calculando el subtotal general.
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <param name="tiendaId">Tienda para verificar stock disponible de cada item.</param>
+            <param name="direccionId">Dirección de entrega asignada si la modalidad es delivery.</param>
+            <param name="tiendaRetiroId">Tienda asignada si la modalidad es retiro en tienda.</param>
+            <returns>Estructura del carrito y estado de validación para proceder a checkout.</returns>
+        </member>
+        <member name="M:WebApi.Services.CarritoService.GestionarCarritoAsync(WebApi.DTOs.GestionarCarritoRequestDto)">
+            <summary>
+            Servicio 10: Ejecuta operaciones de agregar, editar cantidad o remover productos en el carrito.
+            Aplica la regla: "Para continuar con la compra es obligatorio ingresar una dirección de entrega o seleccionar un local de retiro".
+            </summary>
+            <param name="request">Parámetros de la acción y producto.</param>
+            <returns>Carrito actualizado con subtotales recalculados.</returns>
+        </member>
+        <member name="T:WebApi.Services.CatalogoService">
+            <summary>
+            Implementación de la lógica de negocio para Catálogo de productos, categorías e inventario de detalle.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.#ctor(WebApi.Data.TamboDbContext)">
+            <summary>
+            Constructor con inyección del contexto de datos TamboDbContext.
+            </summary>
+            <param name="context">Contexto de base de datos.</param>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.ListarCategoriasAsync">
+            <summary>
+            Servicio 1: Lista las categorías principales disponibles en el menú superior (categoria_padre_id IS NULL).
+            </summary>
+            <returns>Categorías raíz ordenadas.</returns>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.ListarSubcategoriasAsync(System.Int32)">
+            <summary>
+            Servicio 2: Lista las subcategorías que pertenecen a la categoría elegida.
+            </summary>
+            <param name="categoriaId">Identificador de la categoría padre.</param>
+            <returns>Lista de subcategorías activas.</returns>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.BuscarProductosPredictivoAsync(System.String)">
+            <summary>
+            Servicio 6: Busca productos en tiempo real por término de texto (nombre, marca o SKU) sin productos borrados.
+            </summary>
+            <param name="termino">Palabra clave de búsqueda.</param>
+            <returns>Primeros 15 resultados coincidentes.</returns>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.ListarProductosPorCategoriaAsync(System.Int32)">
+            <summary>
+            Servicio 7: Lista los productos de una categoría o subcategoría con sus precios y ofertas aplicadas.
+            </summary>
+            <param name="categoriaId">Identificador de la sección.</param>
+            <returns>Colección de productos con detalles comerciales.</returns>
+        </member>
+        <member name="M:WebApi.Services.CatalogoService.ConsultarDetalleProductoAsync(System.Int32,System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Servicio 9: Obtiene la ficha técnica del producto y valida que la cantidad deseada no supere el stock disponible ni el tope de promoción por cliente.
+            </summary>
+            <param name="productoId">Identificador del producto.</param>
+            <param name="cantidad">Cantidad de unidades requeridas.</param>
+            <param name="tiendaId">Identificador de la tienda para consultar stock local.</param>
+            <returns>Información de ficha de producto y estado de stock.</returns>
+        </member>
+        <member name="T:WebApi.Services.CheckoutService">
+            <summary>
+            Implementación de la lógica de negocio para Checkout, Logística, Validación de Stock y Pasarela de Pagos.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.#ctor(WebApi.Data.TamboDbContext,Microsoft.Extensions.Logging.ILogger{WebApi.Services.CheckoutService})">
+            <summary>
+            Constructor con inyección de dependencias de TamboDbContext y Logger.
+            </summary>
+            <param name="context">Contexto de acceso a datos.</param>
+            <param name="logger">Servicio de registro de eventos.</param>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ValidarCoberturaAsync(WebApi.DTOs.ValidarCoberturaRequestDto)">
+            <summary>
+            Servicio 4: Valida la cobertura de delivery para la dirección solicitada y determina la tienda Tambo+ activa más idónea.
+            </summary>
+            <param name="request">Parámetros de dirección y distrito de entrega.</param>
+            <returns>Detalles de cobertura, tienda asignada y costo de envío.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ListarTiendasRetiroAsync(System.String)">
+            <summary>
+            Servicio 5: Lista las tiendas habilitadas para retiro en tienda física.
+            </summary>
+            <param name="busqueda">Criterio opcional de búsqueda por nombre, distrito o dirección.</param>
+            <returns>Colección de tiendas con modalidad de retiro activa.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ListarTiposComprobanteAsync">
+            <summary>
+            Servicio 15: Obtiene el catálogo de comprobantes de pago (Boleta y Factura).
+            </summary>
+            <returns>Lista de comprobantes de pago activos.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ConsultarMetodosPagoDisponiblesAsync(WebApi.DTOs.ConsultarMetodosPagoRequestDto)">
+            <summary>
+            Servicio 16: Lista los métodos de pago habilitados verificando previamente el stock disponible de cada producto en la tienda física asignada.
+            </summary>
+            <param name="request">Parámetros con tiendaId y los productos/cantidades a validar.</param>
+            <returns>Resultado con validación de inventario y catálogo de métodos de pago activos.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.CrearPedidoCheckoutAsync(WebApi.DTOs.CrearPedidoCheckoutDto)">
+            <summary>
+            Servicio 3: Valida modalidad (Delivery/Retiro), disponibilidad de stock, aplica cupones de descuento, calcula costos de envío y genera el pedido.
+            </summary>
+            <param name="request">Datos del pedido, productos, modalidad y comprobante.</param>
+            <returns>Resumen del pedido creado y totales calculados.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ProcesarPagoTarjetaAsync(WebApi.DTOs.ProcesarPagoTarjetaDto)">
+            <summary>
+            Servicio 17: Procesa el pago con tarjeta bancaria, verifica que el pedido no esté pagado previamente, cobra el monto total y actualiza el ciclo de vida del pedido.
+            </summary>
+            <param name="request">Datos de la tarjeta de crédito/débito y del titular.</param>
+            <returns>Resultado de la transacción bancaria y código de autorización.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ConsultarDetalleOrdenPasarelaAsync(System.Int32)">
+            <summary>
+            Servicio 18: Consulta el detalle consolidado de la orden en la pasarela de pagos.
+            </summary>
+            <param name="pedidoId">Identificador del pedido.</param>
+            <returns>Resumen de orden y estado de pago.</returns>
+        </member>
+        <member name="M:WebApi.Services.CheckoutService.ObtenerSeguimientoPedidoAsync(System.String)">
+            <summary>
+            Servicio 19: Obtiene el seguimiento del pedido, historial de transiciones y datos del motorizado si aplica.
+            </summary>
+            <param name="numeroPedido">Código del pedido (ej. TMB-202611-0001).</param>
+            <returns>Información de seguimiento o null si no existe.</returns>
+        </member>
+        <member name="T:WebApi.Services.IAuthService">
+            <summary>
+            Contrato del servicio de autenticación y gestión de cuentas de clientes.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.IAuthService.LoginAsync(WebApi.DTOs.LoginRequestDto)">
+            <summary>
+            Servicio 12: Inicia sesión de un cliente validando credenciales y estado activo.
+            </summary>
+            <param name="request">Credenciales del cliente (correo y contraseña).</param>
+            <returns>Resultado de autenticación con datos del cliente y token simulado.</returns>
+        </member>
+        <member name="M:WebApi.Services.IAuthService.RegistroAsync(WebApi.DTOs.RegistroClienteDto)">
+            <summary>
+            Servicio 13: Registra un nuevo cliente validando unicidad de correo y documento.
+            </summary>
+            <param name="request">Datos personales y credenciales del nuevo cliente.</param>
+            <returns>Resultado del registro con los datos creados y sesión iniciada.</returns>
+        </member>
+        <member name="M:WebApi.Services.IAuthService.ListarDireccionesAsync(System.Int32)">
+            <summary>
+            Servicio 14: Lista las direcciones activas guardadas por un cliente autenticado.
+            </summary>
+            <param name="clienteId">Identificador único del cliente.</param>
+            <returns>Colección de direcciones con información de zona de despacho.</returns>
+        </member>
+        <member name="M:WebApi.Services.IAuthService.CrearDireccionAsync(System.Int32,WebApi.DTOs.CrearDireccionDto)">
+            <summary>
+            Registra una nueva dirección para el cliente y gestiona la dirección principal.
+            </summary>
+            <param name="clienteId">Identificador del cliente propietario de la dirección.</param>
+            <param name="request">Datos de la dirección física, distrito y coordenadas.</param>
+            <returns>Dirección creada o null si el cliente no existe.</returns>
+        </member>
+        <member name="T:WebApi.Services.ICarritoService">
+            <summary>
+            Contrato del servicio de gestión de carrito de compras y verificación de condiciones para checkout.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.ICarritoService.ObtenerCarritoAsync(System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Obtiene el carrito activo del cliente calculando subtotales y disponibilidad de stock en tienda.
+            </summary>
+            <param name="clienteId">Identificador del cliente.</param>
+            <param name="tiendaId">Identificador de la tienda para consultar stock físico.</param>
+            <param name="direccionId">Identificador de la dirección de entrega elegida.</param>
+            <param name="tiendaRetiroId">Identificador del local de retiro seleccionado.</param>
+            <returns>Estado actual del carrito con subtotales y validación de continuación de compra.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICarritoService.GestionarCarritoAsync(WebApi.DTOs.GestionarCarritoRequestDto)">
+            <summary>
+            Servicio 10: Permite agregar, editar cantidad o eliminar productos del carrito activo.
+            </summary>
+            <param name="request">Parámetros de acción (AGREGAR, EDITAR, ELIMINAR), producto, cantidad y tienda/dirección.</param>
+            <returns>Carrito actualizado y subtotal recalculado.</returns>
+        </member>
+        <member name="T:WebApi.Services.ICatalogoService">
+            <summary>
+            Contrato del servicio de catálogo de productos, categorías y navegación.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.ICatalogoService.ListarCategoriasAsync">
+            <summary>
+            Servicio 1: Lista las categorías principales habilitadas para el menú de navegación superior.
+            </summary>
+            <returns>Colección de categorías raíz ordenadas.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICatalogoService.ListarSubcategoriasAsync(System.Int32)">
+            <summary>
+            Servicio 2: Lista las subcategorías que pertenecen a una categoría padre elegida.
+            </summary>
+            <param name="categoriaId">Identificador de la categoría padre.</param>
+            <returns>Colección de subcategorías dependientes.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICatalogoService.BuscarProductosPredictivoAsync(System.String)">
+            <summary>
+            Servicio 6: Realiza una búsqueda predictiva de productos por nombre, marca o SKU.
+            </summary>
+            <param name="termino">Término de búsqueda ingresado por el usuario.</param>
+            <returns>Productos coincidentes con nombre, imagen y precio.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICatalogoService.ListarProductosPorCategoriaAsync(System.Int32)">
+            <summary>
+            Servicio 7: Lista los productos de una categoría o subcategoría con sus precios y promociones.
+            </summary>
+            <param name="categoriaId">Identificador de la categoría o subcategoría.</param>
+            <returns>Productos asociados a la sección solicitada.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICatalogoService.ConsultarDetalleProductoAsync(System.Int32,System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Servicio 9: Consulta el detalle completo de un producto y valida el stock en tienda física y límite por cliente en promoción.
+            </summary>
+            <param name="productoId">Identificador único del producto.</param>
+            <param name="cantidad">Cantidad deseada por el cliente.</param>
+            <param name="tiendaId">Identificador opcional de la tienda física para validar inventario.</param>
+            <returns>Detalle del producto y resultado de validaciones de stock y promociones.</returns>
+        </member>
+        <member name="T:WebApi.Services.ICheckoutService">
+            <summary>
+            Contrato del servicio de checkout, validación logística, inventario y pasarela de pago.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ValidarCoberturaAsync(WebApi.DTOs.ValidarCoberturaRequestDto)">
+            <summary>
+            Servicio 4: Valida la cobertura de delivery por distrito o geolocalización y asigna la tienda física correspondiente.
+            </summary>
+            <param name="request">Distrito, dirección y coordenadas opcionales.</param>
+            <returns>Estado de cobertura, tienda física asignada, costo y tiempo estimado.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ListarTiendasRetiroAsync(System.String)">
+            <summary>
+            Servicio 5: Lista las tiendas habilitadas para retiro en tienda física.
+            </summary>
+            <param name="busqueda">Término opcional de búsqueda por nombre o distrito.</param>
+            <returns>Colección de tiendas con retiro activo.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ListarTiposComprobanteAsync">
+            <summary>
+            Servicio 15: Lista los tipos de comprobantes fiscales habilitados (Boleta / Factura).
+            </summary>
+            <returns>Colección de comprobantes tributarios.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ConsultarMetodosPagoDisponiblesAsync(WebApi.DTOs.ConsultarMetodosPagoRequestDto)">
+            <summary>
+            Servicio 16: Lista los métodos de pago habilitados tras verificar stock en la tienda asignada.
+            </summary>
+            <param name="request">Tienda asignada y lista de items del pedido para validación de inventario.</param>
+            <returns>Métodos de pago disponibles o listado de errores de stock insuficiente.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.CrearPedidoCheckoutAsync(WebApi.DTOs.CrearPedidoCheckoutDto)">
+            <summary>
+            Servicio 3: Genera la orden de pedido en estado inicial, reserva el stock y aplica cupones.
+            </summary>
+            <param name="request">Detalle completo de la orden, modalidad, dirección/tienda y comprobante.</param>
+            <returns>Información del pedido generado y totales calculados.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ProcesarPagoTarjetaAsync(WebApi.DTOs.ProcesarPagoTarjetaDto)">
+            <summary>
+            Servicio 17: Procesa el cobro con tarjeta mediante pasarela de pagos virtual.
+            </summary>
+            <param name="request">Datos del titular y tarjeta de crédito/débito.</param>
+            <returns>Resultado de autorización bancaria y código de transacción.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ConsultarDetalleOrdenPasarelaAsync(System.Int32)">
+            <summary>
+            Servicio 18: Consulta el estado de pago y resumen de una orden en la pasarela.
+            </summary>
+            <param name="pedidoId">Identificador único del pedido.</param>
+            <returns>Resumen detallado de la orden o null si no existe.</returns>
+        </member>
+        <member name="M:WebApi.Services.ICheckoutService.ObtenerSeguimientoPedidoAsync(System.String)">
+            <summary>
+            Servicio 19: Consulta el ciclo de vida y seguimiento en tiempo real del pedido.
+            </summary>
+            <param name="numeroPedido">Código alfanumérico del pedido (ej. TMB-202611-0001).</param>
+            <returns>Estado actual, historial de hitos y datos de repartidor.</returns>
+        </member>
+        <member name="T:WebApi.Services.IPromocionService">
+            <summary>
+            Contrato del servicio de promociones, combos especiales y validación de cupones.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.IPromocionService.ListarPromocionesCombosAsync">
+            <summary>
+            Servicio 8: Lista las promociones y combos ("Tambo Packs") vigentes con precios y descuentos.
+            </summary>
+            <returns>Colección de combos y packs activos.</returns>
+        </member>
+        <member name="M:WebApi.Services.IPromocionService.ValidarCuponAsync(WebApi.DTOs.ValidarCuponRequestDto)">
+            <summary>
+            Servicio 11: Valida un cupón de descuento por vigencia, monto mínimo y límite de canjes.
+            </summary>
+            <param name="request">Código del cupón y subtotal de la compra.</param>
+            <returns>Resultado de la validación, monto descontado y nuevo total.</returns>
+        </member>
+        <member name="T:WebApi.Services.PromocionService">
+            <summary>
+            Implementación de la lógica de negocio para promociones, combos Tambo Packs y cupones de descuento.
+            </summary>
+        </member>
+        <member name="M:WebApi.Services.PromocionService.#ctor(WebApi.Data.TamboDbContext)">
+            <summary>
+            Constructor con inyección del DbContext.
+            </summary>
+            <param name="context">Contexto de acceso a base de datos.</param>
+        </member>
+        <member name="M:WebApi.Services.PromocionService.ListarPromocionesCombosAsync">
+            <summary>
+            Servicio 8: Obtiene las promociones y combos vigentes a la fecha actual con los productos que incluye cada combo.
+            </summary>
+            <returns>Lista de promociones vigentes.</returns>
+        </member>
+        <member name="M:WebApi.Services.PromocionService.ValidarCuponAsync(WebApi.DTOs.ValidarCuponRequestDto)">
+            <summary>
+            Servicio 11: Valida el código de cupón, su estado activo, fechas de inicio/fin, cantidad máxima de usos y monto mínimo de compra.
+            </summary>
+            <param name="request">Código y subtotal a verificar.</param>
+            <returns>Descuento aplicado y total recalculado.</returns>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>
